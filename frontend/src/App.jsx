@@ -1,39 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import jsQR from 'jsqr';
 
-// ─── Config ─────────────────────────────────────────────────────────────────
-// QR code : le QR imprimé dans la salle doit encoder exactement cette chaîne
-const QR_SECRET = 'DEFPI-FRAGMENT-QR-5';
+// ─── Config (à adapter par l'animateur) ─────────────────────────────────────
 
-// GPS : coordonnées de la cible (à modifier selon l'emplacement réel)
-const GPS_TARGET = { lat: 48.8566, lng: 2.3522 };
-const GPS_TOLERANCE_M = 15; // distance en mètres pour valider
+// Étape 4 — QR : le QR imprimé dans la salle doit encoder cette chaîne exacte.
+// Le code visible sous le QR (pour la saisie manuelle) doit être le même.
+const QR_SECRET = 'DEFPI-QR-5';
 
-// ─── Utilitaires GPS ────────────────────────────────────────────────────────
-function haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+// Étape 5 — Chasse au trésor : une carte physique est cachée dans la salle.
+// Modifie l'énigme et le code secret selon ton installation.
+const HUNT_RIDDLE  = 'Je garde les livres et les secrets. Cherche derrière moi, sur l\'étagère du bas.';
+const HUNT_SECRET  = 'SERVEUR1'; // code écrit sur la carte cachée (insensible à la casse)
 
-function getBearing(lat1, lon1, lat2, lon2) {
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const y = Math.sin(dLon) * Math.cos(lat2 * (Math.PI / 180));
-  const x =
-    Math.cos(lat1 * (Math.PI / 180)) * Math.sin(lat2 * (Math.PI / 180)) -
-    Math.sin(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.cos(dLon);
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-// ─── Bannière de feedback (remplace alert()) ────────────────────────────────
+// ─── Bannière de feedback ────────────────────────────────────────────────────
 function FeedbackBanner({ feedback, onClose }) {
   useEffect(() => {
     if (!feedback) return;
@@ -54,26 +33,19 @@ function FeedbackBanner({ feedback, onClose }) {
         {feedback.type === 'error' ? '❌' : '✅'}
       </span>
       <span className="feedback-text">{feedback.message}</span>
-      <button className="feedback-close" onClick={onClose} aria-label="Fermer">
-        ✕
-      </button>
+      <button className="feedback-close" onClick={onClose} aria-label="Fermer">✕</button>
     </div>
   );
 }
 
-// ─── Barre d'accessibilité ──────────────────────────────────────────────────
-function AccessibilityBar({
-  dyslexic, setDyslexic,
-  highContrast, setHighContrast,
-  fontSize, setFontSize,
-}) {
+// ─── Barre d'accessibilité ───────────────────────────────────────────────────
+function AccessibilityBar({ dyslexic, setDyslexic, highContrast, setHighContrast, fontSize, setFontSize }) {
   const [open, setOpen] = useState(false);
-
   return (
     <div className="a11y-bar">
       <button
         className="a11y-toggle"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="Options d'accessibilité"
@@ -85,30 +57,19 @@ function AccessibilityBar({
       {open && (
         <div className="a11y-panel" role="group" aria-label="Réglages d'accessibilité">
           <p className="a11y-panel-title">Affichage</p>
-
-          <button
-            className={`a11y-btn ${dyslexic ? 'active' : ''}`}
-            onClick={() => setDyslexic((d) => !d)}
-            aria-pressed={dyslexic}
-          >
+          <button className={`a11y-btn ${dyslexic ? 'active' : ''}`} onClick={() => setDyslexic(d => !d)} aria-pressed={dyslexic}>
             🔤 Police dyslexie
           </button>
-
-          <button
-            className={`a11y-btn ${highContrast ? 'active' : ''}`}
-            onClick={() => setHighContrast((h) => !h)}
-            aria-pressed={highContrast}
-          >
+          <button className={`a11y-btn ${highContrast ? 'active' : ''}`} onClick={() => setHighContrast(h => !h)} aria-pressed={highContrast}>
             ☀️ Fort contraste
           </button>
-
           <div role="group" aria-label="Taille du texte">
             <p className="a11y-font-label">Taille :</p>
             <div className="a11y-font-size">
               {[
-                { key: 'normal', label: 'A',   aria: 'Normale' },
-                { key: 'large',  label: 'A+',  aria: 'Grande'  },
-                { key: 'xlarge', label: 'A++', aria: 'Très grande' },
+                { key: 'normal', label: 'A',   aria: 'Normale'      },
+                { key: 'large',  label: 'A+',  aria: 'Grande'       },
+                { key: 'xlarge', label: 'A++', aria: 'Très grande'  },
               ].map(({ key, label, aria }) => (
                 <button
                   key={key}
@@ -116,9 +77,7 @@ function AccessibilityBar({
                   onClick={() => setFontSize(key)}
                   aria-pressed={fontSize === key}
                   aria-label={`Taille ${aria}`}
-                >
-                  {label}
-                </button>
+                >{label}</button>
               ))}
             </div>
           </div>
@@ -128,7 +87,7 @@ function AccessibilityBar({
   );
 }
 
-// ─── Indicateur de progression ──────────────────────────────────────────────
+// ─── Indicateur de progression ───────────────────────────────────────────────
 const STEPS_ORDER = ['step1', 'step2', 'step3', 'step4', 'step5', 'final'];
 const STEP_META = {
   step1: { icon: '🔐', label: 'Défi 1' },
@@ -142,7 +101,6 @@ const STEP_META = {
 function StepProgress({ step }) {
   const currentIdx = STEPS_ORDER.indexOf(step);
   if (currentIdx === -1) return null;
-
   return (
     <nav className="step-progress" aria-label="Progression de la mission">
       {STEPS_ORDER.map((s, i) => {
@@ -166,19 +124,19 @@ function StepProgress({ step }) {
   );
 }
 
-// ─── Scanner QR Code (caméra + jsQR) ────────────────────────────────────────
+// ─── Scanner QR (webcam USB + jsQR, fallback saisie manuelle) ────────────────
 function QRScanner({ onScan }) {
-  const videoRef   = useRef(null);
-  const canvasRef  = useRef(null);
-  const animRef    = useRef(null);
-  const streamRef  = useRef(null);
-  const [camError, setCamError] = useState(null);
-  const [scanning, setScanning] = useState(false);
-  const [detected, setDetected] = useState(false);
+  const videoRef  = useRef(null);
+  const canvasRef = useRef(null);
+  const animRef   = useRef(null);
+  const streamRef = useRef(null);
+
+  const [mode, setMode]         = useState('starting'); // starting | camera | manual | detected | error
+  const [manualCode, setManualCode] = useState('');
 
   const stopCamera = useCallback(() => {
-    if (animRef.current)  cancelAnimationFrame(animRef.current);
-    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    if (animRef.current)   cancelAnimationFrame(animRef.current);
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
   }, []);
 
   const scanFrame = useCallback(() => {
@@ -194,13 +152,11 @@ function QRScanner({ onScan }) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code    = jsQR(imgData.data, imgData.width, imgData.height, {
-      inversionAttempts: 'dontInvert',
-    });
-    if (code) {
-      setDetected(true);
+    const result  = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    if (result) {
       stopCamera();
-      onScan(code.data);
+      setMode('detected');
+      onScan(result.data);
     } else {
       animRef.current = requestAnimationFrame(scanFrame);
     }
@@ -208,193 +164,186 @@ function QRScanner({ onScan }) {
 
   useEffect(() => {
     let mounted = true;
-    navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: 'environment' } })
-      .then((stream) => {
-        if (!mounted) { stream.getTracks().forEach((t) => t.stop()); return; }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMode('manual');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current.play();
-          setScanning(true);
+          setMode('camera');
           animRef.current = requestAnimationFrame(scanFrame);
         };
       })
-      .catch(() => {
-        if (mounted) setCamError(true);
-      });
-
-    return () => {
-      mounted = false;
-      stopCamera();
-    };
+      .catch(() => { if (mounted) setMode('manual'); });
+    return () => { mounted = false; stopCamera(); };
   }, [scanFrame, stopCamera]);
 
-  if (camError) {
+  const submitManual = (e) => {
+    e.preventDefault();
+    onScan(manualCode.trim().toUpperCase());
+  };
+
+  // Vue caméra
+  if (mode === 'starting') {
     return (
-      <div className="qr-error" role="status">
-        <span className="qr-error-icon" aria-hidden="true">📵</span>
-        <p>La caméra n'est pas accessible.<br/>Demande à l'animateur de valider manuellement.</p>
+      <div className="qr-status" role="status">
+        <span className="qr-status-icon" aria-hidden="true">📷</span>
+        <p>Activation de la caméra…</p>
+      </div>
+    );
+  }
+
+  if (mode === 'detected') {
+    return (
+      <div className="qr-status qr-status-ok" role="status" aria-live="polite">
+        <span className="qr-status-icon" aria-hidden="true">✅</span>
+        <p>QR Code détecté !</p>
+      </div>
+    );
+  }
+
+  if (mode === 'camera') {
+    return (
+      <div className="qr-wrapper" aria-label="Scanner QR Code actif">
+        <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
+        <div className="qr-viewfinder">
+          <canvas ref={canvasRef} className="qr-canvas" />
+          <div className="qr-corners" aria-hidden="true">
+            <span /><span /><span /><span />
+          </div>
+          <div className="qr-scan-line" aria-hidden="true" />
+        </div>
+        <p className="qr-hint" role="status" aria-live="polite">Pointe la caméra vers le QR code…</p>
+        <button className="qr-switch-btn" onClick={() => { stopCamera(); setMode('manual'); }}>
+          ⌨️ Saisir le code manuellement
+        </button>
+      </div>
+    );
+  }
+
+  // Mode manuel (pas de webcam, ou choix de l'utilisateur)
+  return (
+    <div className="qr-manual" role="region" aria-label="Saisie manuelle du code QR">
+      <div className="qr-manual-icon" aria-hidden="true">🔍</div>
+      <p className="step-content">
+        Trouve le QR code caché dans la salle.<br />
+        Le code est écrit juste en dessous. Tape-le ici :
+      </p>
+      <form onSubmit={submitManual}>
+        <label htmlFor="qr-manual-input" className="input-label">Code du QR :</label>
+        <br />
+        <input
+          id="qr-manual-input"
+          className="input-code input-code-wide"
+          value={manualCode}
+          onChange={e => setManualCode(e.target.value)}
+          placeholder="ex: DEFPI-QR-5"
+          autoFocus
+          autoCapitalize="characters"
+          spellCheck={false}
+          aria-describedby="qr-manual-hint"
+        />
+        <p id="qr-manual-hint" className="hint">
+          💡 Le code est imprimé sous le QR code.
+        </p>
+        <br />
+        <button type="submit" className="btn btn-primary">✅ Valider</button>
+      </form>
+      {navigator.mediaDevices?.getUserMedia && (
+        <button className="qr-switch-btn" style={{ marginTop: '1rem' }} onClick={() => setMode('starting')}>
+          📷 Utiliser la caméra
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Chasse au trésor physique ───────────────────────────────────────────────
+function TreasureHunt({ onSuccess, showFeedback }) {
+  const [phase, setPhase]   = useState('riddle'); // riddle | search | input
+  const [secret, setSecret] = useState('');
+
+  const submitSecret = (e) => {
+    e.preventDefault();
+    if (secret.trim().toUpperCase() === HUNT_SECRET.toUpperCase()) {
+      onSuccess();
+    } else {
+      showFeedback('Ce n\'est pas le bon code… cherche encore !', 'error');
+      setSecret('');
+    }
+  };
+
+  if (phase === 'riddle') {
+    return (
+      <div className="hunt-container">
+        <div className="hunt-riddle-box" role="status" aria-live="polite">
+          <span className="hunt-riddle-label" aria-hidden="true">🧩 Énigme</span>
+          <p className="hunt-riddle-text">« {HUNT_RIDDLE} »</p>
+        </div>
+        <p className="step-content">Résous l'énigme, trouve l'endroit, et cherche le code caché !</p>
+        <button className="btn btn-primary" onClick={() => setPhase('search')}>
+          🏃 Je pars chercher !
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'search') {
+    return (
+      <div className="hunt-container">
+        <div className="hunt-searching" role="status" aria-live="polite">
+          <span className="hunt-search-icon" aria-hidden="true">🔦</span>
+          <p>En train de chercher…</p>
+          <p className="hint">Rappel : « {HUNT_RIDDLE} »</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setPhase('input')}>
+          🎯 J'ai trouvé le code !
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="qr-wrapper" aria-label="Scanner QR Code actif">
-      <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
-      <div className="qr-viewfinder">
-        <canvas ref={canvasRef} className={`qr-canvas ${detected ? 'qr-detected' : ''}`} />
-        {!detected && (
-          <div className="qr-corners" aria-hidden="true">
-            <span /><span /><span /><span />
-          </div>
-        )}
-        {scanning && !detected && (
-          <div className="qr-scan-line" aria-hidden="true" />
-        )}
-        {detected && (
-          <div className="qr-success-overlay" aria-hidden="true">✅</div>
-        )}
-      </div>
-      {scanning && !detected && (
-        <p className="qr-hint" role="status" aria-live="polite">
-          Pointe la caméra vers le QR code…
-        </p>
-      )}
+    <div className="hunt-container">
+      <div className="hunt-found-icon" aria-hidden="true">📜</div>
+      <p className="step-content">Tape le code secret que tu as trouvé :</p>
+      <form onSubmit={submitSecret}>
+        <label htmlFor="hunt-input" className="input-label">Code secret :</label>
+        <br />
+        <input
+          id="hunt-input"
+          className="input-code input-code-wide"
+          value={secret}
+          onChange={e => setSecret(e.target.value)}
+          placeholder="????????"
+          autoFocus
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={20}
+          aria-describedby="hunt-hint"
+        />
+        <p id="hunt-hint" className="hint">💡 Tape exactement ce qui est écrit sur la carte.</p>
+        <br />
+        <button type="submit" className="btn btn-primary">✅ Valider</button>
+      </form>
     </div>
   );
 }
 
-// ─── Défi GPS ────────────────────────────────────────────────────────────────
-function GPSChallenge({ onSuccess, showFeedback }) {
-  const [pos, setPos]           = useState(null);
-  const [distance, setDistance] = useState(null);
-  const [bearing, setBearing]   = useState(null);
-  const [gpsError, setGpsError] = useState(null);
-  const watchIdRef = useRef(null);
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGpsError('GPS non disponible sur cet appareil.');
-      return;
-    }
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      ({ coords }) => {
-        const { latitude: lat, longitude: lng } = coords;
-        setPos({ lat, lng });
-        const dist = haversineDistance(lat, lng, GPS_TARGET.lat, GPS_TARGET.lng);
-        setDistance(Math.round(dist));
-        setBearing(getBearing(lat, lng, GPS_TARGET.lat, GPS_TARGET.lng));
-        setGpsError(null);
-      },
-      () => setGpsError('Impossible d\'accéder au GPS. Autorise la localisation !'),
-      { enableHighAccuracy: true, maximumAge: 3000 }
-    );
-    return () => {
-      if (watchIdRef.current !== null)
-        navigator.geolocation.clearWatch(watchIdRef.current);
-    };
-  }, []);
-
-  const arrived = distance !== null && distance <= GPS_TOLERANCE_M;
-
-  const distanceColor =
-    distance === null ? '#94a3b8'
-    : distance < 30   ? '#4ade80'
-    : distance < 80   ? '#fbbf24'
-    :                   '#f87171';
-
-  return (
-    <div className="gps-container">
-      <div className="gps-target-box" role="status">
-        <span className="gps-coord-label">📍 Coordonnées cibles :</span>
-        <code className="gps-coords">
-          {GPS_TARGET.lat.toFixed(5)}°N &nbsp; {GPS_TARGET.lng.toFixed(5)}°E
-        </code>
-      </div>
-
-      {gpsError ? (
-        <div className="gps-error">
-          <p>⚠️ {gpsError}</p>
-          <button className="btn btn-secondary" onClick={onSuccess}>
-            ✅ Valider (animateur)
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Boussole */}
-          <div className="gps-compass-wrapper" aria-label={`Direction : ${Math.round(bearing || 0)} degrés`}>
-            <div
-              className="gps-compass-needle"
-              style={{ transform: `rotate(${bearing ?? 0}deg)` }}
-              aria-hidden="true"
-            >
-              🧭
-            </div>
-          </div>
-
-          {/* Distance */}
-          <div
-            className="gps-distance"
-            role="status"
-            aria-live="polite"
-            aria-label={`Distance : ${distance ?? '...'} mètres`}
-            style={{ color: distanceColor }}
-          >
-            {distance !== null ? (
-              <>
-                <span className="gps-dist-number">{distance}</span>
-                <span className="gps-dist-unit">mètres</span>
-              </>
-            ) : (
-              <span className="gps-searching">Recherche du signal GPS…</span>
-            )}
-          </div>
-
-          {/* Barre de progression vers la cible */}
-          {distance !== null && (
-            <div className="gps-progress-bar" aria-hidden="true">
-              <div
-                className="gps-progress-fill"
-                style={{
-                  width: `${Math.max(0, Math.min(100, ((200 - distance) / 200) * 100))}%`,
-                  background: distanceColor,
-                }}
-              />
-            </div>
-          )}
-
-          {arrived && (
-            <div className="gps-arrived" role="status" aria-live="assertive">
-              <p>🎉 Tu es au bon endroit !</p>
-              <button className="btn btn-primary" onClick={onSuccess}>
-                ✅ Récupérer le fragment !
-              </button>
-            </div>
-          )}
-
-          {pos && !arrived && (
-            <p className="gps-current-pos">
-              Ta position : {pos.lat.toFixed(5)}°N, {pos.lng.toFixed(5)}°E
-            </p>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ─── Application principale ─────────────────────────────────────────────────
+// ─── Application principale ──────────────────────────────────────────────────
 function App() {
-  // États du jeu
-  const [step, setStep]           = useState('home');
-  const [code, setCode]           = useState('');
+  const [step, setStep]         = useState('home');
+  const [code, setCode]         = useState('');
   const [fragments, setFragments] = useState([]);
-  const [lastNfc, setLastNfc]     = useState(null);
+  const [lastNfc, setLastNfc]   = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [feedback, setFeedback]   = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
-  // Préférences d'accessibilité
   const [dyslexic, setDyslexic]         = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [fontSize, setFontSize]         = useState('normal');
@@ -427,7 +376,6 @@ function App() {
     setTimeout(() => setIsSimulating(false), 2000);
   }, [isSimulating, handleNfcDetection]);
 
-  // WebSocket NFC
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl    = `${protocol}//${window.location.host}/ws/nfc`;
@@ -443,26 +391,27 @@ function App() {
     const onKey = (e) => {
       if (e.repeat) return;
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
-        e.preventDefault(); triggerSimulation();
+        e.preventDefault();
+        triggerSimulation();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => { ws.current?.close(); window.removeEventListener('keydown', onKey); };
   }, [handleNfcDetection, triggerSimulation]);
 
-  // Avance automatiquement après scan NFC
   useEffect(() => {
     if (step === 'step2' && lastNfc) addFragment('2', 'step3');
   }, [lastNfc, step]);
 
-  // Fragments mélangés pour l'affichage sur l'étape finale
-  const shuffledFragments = useMemo(() => {
-    if (step !== 'final') return [];
-    return [...fragments].sort(() => Math.random() - 0.5);
-  }, [step]); // ne recalcule qu'une fois quand on arrive à 'final'
+  // Fragments affichés dans un ordre aléatoire sur l'étape finale
+  const shuffledFragments = useMemo(
+    () => step === 'final' ? [...fragments].sort(() => Math.random() - 0.5) : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [step],
+  );
 
   const addFragment = (val, nextStep) => {
-    setFragments((prev) => [...prev, val]);
+    setFragments(prev => [...prev, val]);
     setStep(nextStep);
     setCode('');
     clearFeedback();
@@ -473,34 +422,32 @@ function App() {
     if (code === '32') {
       addFragment('3', 'step2');
     } else {
-      showFeedback('Pas tout à fait… Regarde comment chaque nombre est lié au suivant !', 'error');
+      showFeedback('Pas tout à fait… Regarde comment chaque nombre évolue !', 'error');
       setCode('');
     }
   };
 
-  // Défi 4 : validation QR
-  const handleQRScan = useCallback((scannedData) => {
-    if (scannedData === QR_SECRET) {
-      showFeedback('🎉 QR Code validé ! Fragment récupéré !', 'success');
+  const handleQRScan = useCallback((scanned) => {
+    if (scanned === QR_SECRET) {
+      showFeedback('🎉 Code QR validé ! Fragment récupéré !', 'success');
       setTimeout(() => addFragment('5', 'step5'), 1200);
     } else {
-      showFeedback('Ce QR code n\'est pas le bon, cherche encore !', 'error');
+      showFeedback('Ce code n\'est pas le bon, cherche encore !', 'error');
     }
   }, []);
 
-  // Défi 5 : validation GPS
-  const handleGPSSuccess = useCallback(() => {
-    showFeedback('🌟 Tu es au bon endroit ! Fragment récupéré !', 'success');
+  const handleHuntSuccess = useCallback(() => {
+    showFeedback('🌟 Excellent ! Fragment caché trouvé !', 'success');
     setTimeout(() => addFragment('1', 'final'), 1200);
   }, []);
 
-  // Code final : '32451' (ordre de collection des fragments)
+  // Code final : fragments dans l'ordre de collection → '32451'
   const checkFinalCode = (e) => {
     e.preventDefault();
     if (code === '32451') {
       setStep('victory');
     } else {
-      showFeedback('Code incorrect ! Souviens-toi de l\'ordre dans lequel tu as trouvé les fragments.', 'error');
+      showFeedback('Code incorrect ! Souviens-toi de l\'ordre dans lequel tu as réussi les défis.', 'error');
       setCode('');
     }
   };
@@ -520,8 +467,6 @@ function App() {
     `font-size-${fontSize}`,
   ].filter(Boolean).join(' ');
 
-  const totalFragments = 5;
-
   return (
     <div className={rootClasses}>
       <AccessibilityBar
@@ -532,19 +477,18 @@ function App() {
 
       <FeedbackBanner feedback={feedback} onClose={clearFeedback} />
 
-      {/* Barre de fragments */}
       {step !== 'home' && step !== 'victory' && (
         <div
           className="fragments-bar"
           role="status"
           aria-live="polite"
-          aria-label={`Fragments récupérés : ${fragments.length} sur ${totalFragments}`}
+          aria-label={`Fragments récupérés : ${fragments.length} sur 5`}
         >
           <span className="fragments-label">🧩 Fragments :</span>
           {fragments.map((f, i) => (
             <span key={i} className="fragment-chip" aria-label={`Fragment ${f}`}>{f}</span>
           ))}
-          {[...Array(totalFragments - fragments.length)].map((_, i) => (
+          {[...Array(5 - fragments.length)].map((_, i) => (
             <span key={i} className="fragment-placeholder" aria-label="Fragment manquant">?</span>
           ))}
         </div>
@@ -591,10 +535,7 @@ function App() {
               <span className="step-icon" aria-hidden="true">🔐</span>
               <h2 className="step-title">Défi 1 : Le code d'accès</h2>
               <p className="step-content">Complète la suite de nombres :</p>
-              <strong
-                className="sequence"
-                aria-label="Suite : 2, 4, 8, 16, point d'interrogation"
-              >
+              <strong className="sequence" aria-label="Suite : 2, 4, 8, 16, point d'interrogation">
                 2 — 4 — 8 — 16 — <span className="sequence-missing">?</span>
               </strong>
               <form onSubmit={checkEnigma}>
@@ -604,16 +545,14 @@ function App() {
                   id="code-d1"
                   className="input-code"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={e => setCode(e.target.value)}
                   placeholder="??"
                   autoFocus
                   inputMode="numeric"
                   maxLength={4}
                   aria-describedby="hint-d1"
                 />
-                <p id="hint-d1" className="hint">
-                  💡 Comment passe-t-on d'un nombre au suivant ?
-                </p>
+                <p id="hint-d1" className="hint">💡 Comment passe-t-on d'un nombre au suivant ?</p>
                 <br />
                 <button type="submit" className="btn btn-primary">✅ Valider</button>
               </form>
@@ -629,12 +568,7 @@ function App() {
                 Trouve la carte NFC <strong>"CLÉ SERVEUR"</strong><br />
                 et passe-la sur le lecteur.
               </p>
-              <div
-                className="nfc-waiting"
-                role="status"
-                aria-live="polite"
-                aria-label="En attente du scan NFC"
-              >
+              <div className="nfc-waiting" role="status" aria-live="polite" aria-label="En attente du scan NFC">
                 <div className="nfc-anim-wrapper">
                   <div className="nfc-ring" aria-hidden="true" />
                   <span className="nfc-icon" aria-hidden="true">📶</span>
@@ -660,22 +594,13 @@ function App() {
               <h2 className="step-title">Défi 3 : Le bon mot de passe</h2>
               <p className="step-content">Quel mot de passe est le plus solide ?</p>
               <div className="quiz-grid" role="group" aria-label="Choix du meilleur mot de passe">
-                <button
-                  className="btn-quiz"
-                  onClick={() => showFeedback('Trop court et trop facile à deviner !', 'error')}
-                >
+                <button className="btn-quiz" onClick={() => showFeedback('Trop court et trop facile à deviner !', 'error')}>
                   A.&nbsp;&nbsp;ecole
                 </button>
-                <button
-                  className="btn-quiz"
-                  onClick={() => showFeedback('Trop simple ! Le plus piraté au monde !', 'error')}
-                >
+                <button className="btn-quiz" onClick={() => showFeedback('Trop simple ! Le plus piraté au monde !', 'error')}>
                   B.&nbsp;&nbsp;123456
                 </button>
-                <button
-                  className="btn-quiz"
-                  onClick={() => showFeedback('Un mot du dictionnaire, trop risqué !', 'error')}
-                >
+                <button className="btn-quiz" onClick={() => showFeedback('Un mot du dictionnaire, trop risqué !', 'error')}>
                   C.&nbsp;&nbsp;Chocolat
                 </button>
                 <button
@@ -698,26 +623,22 @@ function App() {
               <h2 className="step-title">Défi 4 : Le QR Code caché</h2>
               <p className="step-content">
                 Un QR code est caché quelque part dans la salle.<br />
-                Trouve-le et scanne-le avec ta caméra !
+                Trouve-le et scanne-le — ou tape le code imprimé dessous !
               </p>
               <QRScanner onScan={handleQRScan} />
             </div>
           )}
 
-          {/* ── DÉFI 5 : GPS ── */}
+          {/* ── DÉFI 5 : Chasse au trésor ── */}
           {step === 'step5' && (
             <div>
               <span className="step-icon" aria-hidden="true">🗺️</span>
-              <h2 className="step-title">Défi 5 : Chasse au trésor GPS</h2>
-              <p className="step-content">
-                Un fragment est caché à des coordonnées précises.<br />
-                Suis la boussole pour t'y rendre !
-              </p>
-              <GPSChallenge onSuccess={handleGPSSuccess} showFeedback={showFeedback} />
+              <h2 className="step-title">Défi 5 : Chasse au trésor</h2>
+              <TreasureHunt onSuccess={handleHuntSuccess} showFeedback={showFeedback} />
             </div>
           )}
 
-          {/* ── ÉTAPE FINALE : Code ── */}
+          {/* ── ÉTAPE FINALE ── */}
           {step === 'final' && (
             <div>
               <span className="step-icon" aria-hidden="true">💻</span>
@@ -726,34 +647,27 @@ function App() {
                 Retrouve l'ordre dans lequel tu as collecté les 5 fragments<br />
                 pour former le code de redémarrage !
               </p>
-              <div
-                className="fragments-hint"
-                aria-label="Tes fragments (dans le désordre)"
-              >
+              <div className="fragments-hint" aria-label="Tes fragments (dans le désordre)">
                 {shuffledFragments.map((f, i) => (
                   <span key={i} className="fragment-chip-large" aria-label={`Fragment ${f}`}>{f}</span>
                 ))}
               </div>
               <p className="hint">💡 Dans quel ordre as-tu résolu les défis ?</p>
               <form onSubmit={checkFinalCode}>
-                <label htmlFor="code-final" className="input-label">
-                  Tape le code (5 chiffres) :
-                </label>
+                <label htmlFor="code-final" className="input-label">Code (5 chiffres) :</label>
                 <br />
                 <input
                   id="code-final"
                   className="input-code"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={e => setCode(e.target.value)}
                   placeholder="?????"
                   autoFocus
                   inputMode="numeric"
                   maxLength={5}
                   aria-describedby="hint-final"
                 />
-                <p id="hint-final" className="hint">
-                  Le fragment du Défi 1 est en 1ère position, le Défi 2 en 2ème…
-                </p>
+                <p id="hint-final" className="hint">Le fragment du Défi 1 est en 1ère position, etc.</p>
                 <br />
                 <button type="submit" className="btn btn-primary">🔄 REDÉMARRER</button>
               </form>
@@ -771,9 +685,7 @@ function App() {
                 🎖️ Titre : <strong>Brigade Anti-Bug niveau 1</strong>
               </p>
               <div className="stars" aria-label="3 étoiles sur 3" role="img">⭐⭐⭐</div>
-              <button className="btn btn-primary" onClick={resetGame} autoFocus>
-                🔁 Rejouer
-              </button>
+              <button className="btn btn-primary" onClick={resetGame} autoFocus>🔁 Rejouer</button>
             </div>
           )}
 
@@ -781,11 +693,7 @@ function App() {
       </main>
 
       {step !== 'home' && (
-        <button
-          className="btn-home-link"
-          onClick={resetGame}
-          aria-label="Retour à l'écran d'accueil"
-        >
+        <button className="btn-home-link" onClick={resetGame} aria-label="Retour à l'écran d'accueil">
           🏠 Accueil
         </button>
       )}
