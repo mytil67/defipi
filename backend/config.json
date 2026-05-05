@@ -1,0 +1,47 @@
+{
+  "step1_sequence": "2 — 4 — 8 — 16",
+  "step1_answer": "32",
+  "step2_nfc_uids": [
+    "BB DE 5C 0C"
+  ],
+  "step3_questions": [
+    {
+      "id": 1,
+      "text": "Quel mot de passe est le plus solide ?",
+      "type": "quiz",
+      "options": [
+        "ecole",
+        "123456",
+        "Chocolat",
+        "Crabe!Violet_27"
+      ],
+      "answer": "Crabe!Violet_27"
+    }
+  ],
+  "step4_questions": [
+    {
+      "id": 1,
+      "fake_message": "De : cadeaux@super-site.biz\n\nFélicitations ! Tu as gagné un iPad !\nClique ici et donne ton mot de passe scolaire pour recevoir ton cadeau.\nOffre valable 5 minutes seulement !",
+      "text": "Ce message reçu par e-mail, c'est… ?",
+      "type": "quiz",
+      "options": [
+        "Un vrai cadeau de l'école",
+        "Un message dangereux (phishing)",
+        "Une information normale",
+        "Une blague d'un camarade"
+      ],
+      "answer": "Un message dangereux (phishing)"
+    }
+  ],
+  "final_code": "3241",
+  "step_themes": {
+    "briefing": { "preset": "alerte"   },
+    "step1":    { "preset": "mystere"  },
+    "step2":    { "preset": "mystere"  },
+    "step3":    { "preset": "neutre"   },
+    "step4":    { "preset": "alerte"   },
+    "final":    { "preset": "victoire" },
+    "victory":  { "preset": "victoire" }
+  },
+  "step_layouts": {}
+}
