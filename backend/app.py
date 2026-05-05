@@ -59,6 +59,27 @@ async def simulate_nfc(payload: SimulationPayload):
     await manager.broadcast(message)
     return {"status": "ok", "simulated": payload.uid}
 
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+def save_config(config):
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+@app.get("/api/config")
+async def get_config():
+    return load_config()
+
+@app.post("/api/config")
+async def post_config(config: dict):
+    save_config(config)
+    return config
+
 @app.websocket("/ws/nfc")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
