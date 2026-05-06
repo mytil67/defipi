@@ -1131,6 +1131,16 @@ h1 {
 }
 .btn-link-danger:hover { background: #fff5f5; }
 
+.builder-restricted-warning {
+  padding: 0.65rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 2px solid #fdba74;
+}
+
 .builder-status {
   padding: 0.5rem 0.9rem;
   border-radius: 0.6rem;
@@ -1273,4 +1283,253 @@ h1 {
 /* Responsive : les blocs petits/moyens passent en 100% sur mobile */
 @media (max-width: 600px) {
   .bl-small, .bl-medium, .bl-large { width: 100%; }
+}
+
+/* ── Sélecteur de jeux ────────────────────────────────────────────────────── */
+.game-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 2rem 1.5rem 1.5rem;
+  background: var(--bg-gradient);
+  overflow-y: auto;
+  position: relative;
+}
+
+.game-selector-header { text-align: center; margin-bottom: 2rem; flex-shrink: 0; }
+.game-selector-title  { font-size: calc(3.5rem * var(--font-scale)); margin: 0.2rem 0 0.5rem; color: var(--primary-color); font-weight: 900; text-shadow: 0 0 20px rgba(34,197,94,0.4); }
+.game-selector-sub    { font-size: calc(1.3rem * var(--font-scale)); color: var(--text-muted); margin: 0; font-weight: 600; }
+.game-selector-empty  { color: var(--text-muted); font-size: 1.1rem; text-align: center; padding: 3rem; line-height: 1.8; }
+
+.game-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.game-card {
+  background: var(--card-bg);
+  border: 3px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 2rem 2.2rem;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.game-card:hover { transform: translateY(-6px); box-shadow: 0 28px 60px rgba(0,0,0,0.6); }
+
+.game-card-body   { flex: 1; }
+.game-card-title  { font-size: calc(1.5rem * var(--font-scale)); color: var(--secondary-color); font-weight: 800; margin: 0 0 0.6rem; line-height: 1.3; }
+.game-card-desc   { font-size: calc(1.05rem * var(--font-scale)); color: var(--text-muted); margin: 0 0 1rem; line-height: 1.6; }
+.game-card-meta   { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.game-meta-badge  { background: rgba(129,140,248,0.15); border: 1px solid var(--border-color); padding: 0.25rem 0.7rem; border-radius: 0.5rem; font-size: calc(0.9rem * var(--font-scale)); color: var(--text-muted); font-weight: 600; }
+.game-card-btn    { width: 100%; }
+
+/* ── Preview frame (admin builder) ───────────────────────────────────────── */
+.preview-frame-outer {
+  border-radius: 1.2rem;
+  padding: 1rem;
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  background: var(--bg-gradient, #0f172a);
+  min-height: 300px;
+}
+.preview-frame-card {
+  background: var(--card-bg, rgba(22,33,62,0.98));
+  border: 2px solid var(--border-color, rgba(129,140,248,0.35));
+  border-radius: 1.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.preview-frame-scroll {
+  overflow-y: auto;
+  padding: 1.5rem;
+  flex: 1;
+  text-align: center;
+  color: var(--text-color, #f8fafc);
+  font-family: var(--font-main, 'Nunito', sans-serif);
+}
+
+/* ── AdminGameBuilder ─────────────────────────────────────────────────────── */
+.agb-container {
+  display: flex;
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+}
+.agb-left {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  overflow-y: auto;
+}
+.agb-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.agb-back          { font-size: 0.85rem; }
+.agb-game-title    { margin: 0; font-size: 1rem; font-weight: 800; color: #0984e3; }
+.agb-section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.3rem; }
+
+.agb-pages-list { display: flex; flex-direction: column; gap: 0.3rem; }
+.agb-page-item {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.agb-page-item:hover             { border-color: #0984e3; }
+.agb-page-item--active           { border-color: #0984e3; background: #eff6ff; }
+.agb-page-item-row               { flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.7rem; }
+.agb-page-type-tag               { font-size: 0.85rem; flex-shrink: 0; }
+.agb-page-name                   { font-size: 0.85rem; font-weight: 700; color: #2d3436; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agb-page-item-btns              { display: flex; gap: 0.2rem; padding-right: 0.4rem; flex-shrink: 0; }
+.agb-page-item-btns button       { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 0.3rem; padding: 0.15rem 0.4rem; font-size: 0.75rem; cursor: pointer; color: #475569; font-family: inherit; }
+.agb-page-item-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.agb-add-page       { display: flex; flex-direction: column; gap: 0.4rem; }
+.agb-add-page-types { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.agb-add-type-btn   { padding: 0.3rem 0.6rem; font-size: 0.8rem; font-family: inherit; font-weight: 700; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.agb-add-type-btn:hover { background: #e0f2fe; border-color: #0984e3; }
+
+.agb-section-tabs      { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; }
+.agb-section-tab       { padding: 0.45rem 0.8rem; border: none; border-bottom: 2px solid transparent; background: transparent; font-family: inherit; font-size: 0.82rem; font-weight: 700; color: #636e72; cursor: pointer; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; }
+.agb-section-tab:hover { color: #0984e3; }
+.agb-section-tab--active { color: #0984e3; border-bottom-color: #0984e3; }
+
+.agb-blocks-editor, .agb-theme-editor, .agb-meta-editor { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; }
+
+/* ── AdminGames ──────────────────────────────────────────────────────────── */
+.admin-games { display: flex; flex-direction: column; gap: 1rem; }
+.admin-games-toolbar { display: flex; align-items: center; gap: 1rem; }
+
+.games-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.game-list-item {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.8rem;
+  padding: 1rem 1.2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: border-color 0.15s;
+}
+.game-list-item--active { border-color: #22c55e; }
+
+.game-list-info  { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+.game-list-row1  { display: flex; align-items: center; gap: 0.6rem; }
+.game-list-row2  { display: flex; }
+.game-list-row3  { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.game-status-dot        { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+.game-status-dot.active { background: #22c55e; }
+
+.game-title-input { font-size: 1rem; font-weight: 800; color: #2d3436; border: none; border-bottom: 2px solid transparent; background: transparent; font-family: inherit; flex: 1; padding: 0; transition: border-color 0.15s; min-width: 0; }
+.game-title-input:focus { outline: none; border-bottom-color: #0984e3; }
+
+.game-desc-input  { font-size: 0.88rem; color: #636e72; border: none; background: transparent; font-family: inherit; width: 100%; padding: 0; }
+.game-desc-input:focus { outline: none; border-bottom: 1px solid #0984e3; }
+
+.game-meta-input  { font-size: 0.82rem; border: 1px solid #e2e8f0; border-radius: 0.4rem; padding: 0.2rem 0.5rem; font-family: inherit; width: 90px; }
+.game-meta-input:focus { outline: none; border-color: #0984e3; }
+
+.game-active-label { font-size: 0.82rem; font-weight: 700; color: #636e72; display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+
+.game-list-actions { display: flex; flex-direction: column; gap: 0.4rem; flex-shrink: 0; }
+.game-list-actions .btn-small { white-space: nowrap; }
+
+/* ── Quiz choix multiples ──────────────────────────────────────────────────── */
+.quiz-multiple-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.quiz-multiple-option {
+  font-family: var(--font-main);
+  font-size: calc(1.2rem * var(--font-scale));
+  padding: 1.3rem 1rem;
+  border: 3px solid #334155;
+  border-radius: 1rem;
+  background: #1a2540;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.4);
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.quiz-multiple-option:hover:not(:disabled) {
+  background: #243050;
+  border-color: var(--secondary-color);
+  transform: translateY(-2px);
+}
+.quiz-multiple-option--selected {
+  background: rgba(129,140,248,0.2);
+  border-color: var(--secondary-color);
+  box-shadow: 0 5px 0 rgba(0,0,0,0.4), inset 0 0 0 1px var(--secondary-color);
+}
+.quiz-multi-check {
+  font-size: 1.1em;
+  flex-shrink: 0;
+  color: var(--secondary-color);
+  min-width: 1.4rem;
+}
+
+/* ── Vrai / Faux ───────────────────────────────────────────────────────────── */
+.true-false-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.btn-quiz--tf {
+  font-size: calc(1.5rem * var(--font-scale));
+  padding: 1.5rem 1rem;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── Drag handle admin builder ─────────────────────────────────────────────── */
+.agb-drag-handle {
+  cursor: grab;
+  padding: 0.2rem 0.3rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  user-select: none;
+  flex-shrink: 0;
+  touch-action: none;
+}
+.agb-drag-handle:active { cursor: grabbing; }
+
+@media (max-width: 600px) {
+  .quiz-multiple-grid { grid-template-columns: 1fr; }
+  .true-false-grid    { grid-template-columns: 1fr; }
 }
